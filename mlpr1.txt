@@ -1,0 +1,65 @@
+
+import pandas as pd
+import seaborn as sns
+
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+# Step 1: Load the dataset
+df = pd.read_csv('titanic.csv')
+
+print("Original Dataset:")
+print(df.head())
+
+# Step 2: Display missing values
+print("\nMissing Values Before Handling:")
+print(df.isnull().sum())
+
+# Step 3: Select relevant columns and create a copy
+df = df[['Survived', 'Pclass', 'Name', 'Sex', 'Age',
+         ]].copy()
+
+# Step 4: Convert Age and Fare into numeric format
+df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
+
+
+# Step 5: Handle missing numerical values using mean
+num_imputer = SimpleImputer(strategy='mean')
+
+df[['Age']] = num_imputer.fit_transform(
+    df[['Age']]
+)
+
+print("\nMissing Values After Handling:")
+print(df.isnull().sum())
+
+# Step 7: Encode categorical variables
+label_encoder = LabelEncoder()
+
+df['Sex'] = label_encoder.fit_transform(df['Sex'])
+
+# Step 8: Remove Name column
+df = df.drop('Name', axis=1)
+
+# Step 9: Scale numerical attributes
+scaler = StandardScaler()
+
+numerical_columns = ['Age']
+
+df[numerical_columns] = scaler.fit_transform(
+    df[numerical_columns]
+)
+
+# Step 10: Display cleaned dataset
+print("\nModel Ready Dataset:")
+print(df.tail())
+
+# Step 11: Display dataset information
+print("\nDataset Information:")
+df.info()
+
+# Step 12: Save processed dataset
+df.to_csv("titanic_cleaned.csv", index=False)
+
+print("\nFeature engineering completed successfully.")
+print("Processed dataset saved as 'titanic_cleaned.csv'")
