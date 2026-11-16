@@ -1,65 +1,99 @@
 
+# ==========================================================
+# Practical 3: Multiple Linear Regression
+# Dataset: California Housing Dataset
+# ==========================================================
+
+# Step 1: Import Libraries
+
 import pandas as pd
-import seaborn as sns
+import numpy as np
 
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Step 1: Load the dataset
-df = pd.read_csv('titanic.csv')
+# Step 2: Load Dataset
 
-print("Original Dataset:")
+housing = fetch_california_housing()
+
+# Separate Input and Output
+
+X = housing.data
+y = housing.target
+
+# Create DataFrame
+
+df = pd.DataFrame(X, columns=housing.feature_names)
+df["HousePrice"] = y
+
+print("First Five Records:")
 print(df.head())
 
-# Step 2: Display missing values
-print("\nMissing Values Before Handling:")
-print(df.isnull().sum())
+print("\nDataset Shape:", df.shape)
 
-# Step 3: Select relevant columns and create a copy
-df = df[['Survived', 'Pclass', 'Name', 'Sex', 'Age',
-         ]].copy()
+# Step 3: Split Dataset into Training and Testing Data
 
-# Step 4: Convert Age and Fare into numeric format
-df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
-
-
-# Step 5: Handle missing numerical values using mean
-num_imputer = SimpleImputer(strategy='mean')
-
-df[['Age']] = num_imputer.fit_transform(
-    df[['Age']]
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42
 )
 
-print("\nMissing Values After Handling:")
-print(df.isnull().sum())
+print("\nTraining Data Shape:", X_train.shape)
+print("Testing Data Shape:", X_test.shape)
 
-# Step 7: Encode categorical variables
-label_encoder = LabelEncoder()
+# Step 4: Create Multiple Linear Regression Model
 
-df['Sex'] = label_encoder.fit_transform(df['Sex'])
+model = LinearRegression()
 
-# Step 8: Remove Name column
-df = df.drop('Name', axis=1)
+# Step 5: Train the Model
 
-# Step 9: Scale numerical attributes
-scaler = StandardScaler()
+model.fit(X_train, y_train)
 
-numerical_columns = ['Age']
+print("\nModel Training Completed Successfully!")
 
-df[numerical_columns] = scaler.fit_transform(
-    df[numerical_columns]
-)
+# Step 6: Predict House Prices
 
-# Step 10: Display cleaned dataset
-print("\nModel Ready Dataset:")
-print(df.tail())
+y_pred = model.predict(X_test)
 
-# Step 11: Display dataset information
-print("\nDataset Information:")
-df.info()
+# Step 7: Evaluate the Model
 
-# Step 12: Save processed dataset
-df.to_csv("titanic_cleaned.csv", index=False)
+mse = mean_squared_error(y_test, y_pred)
 
-print("\nFeature engineering completed successfully.")
-print("Processed dataset saved as 'titanic_cleaned.csv'")
+rmse = np.sqrt(mse)
+
+r2 = r2_score(y_test, y_pred)
+
+# Step 8: Display Model Performance
+
+print("\n========== Model Performance ==========")
+
+print("Mean Squared Error (MSE):", round(mse, 4))
+
+print("Root Mean Squared Error (RMSE):", round(rmse, 4))
+
+print("R2 Score:", round(r2, 4))
+
+# Step 9: Display Intercept
+
+print("\nIntercept:", round(model.intercept_, 4))
+
+# Step 10: Display Regression Coefficients
+
+print("\n========== Regression Coefficients ==========")
+
+for feature, coef in zip(housing.feature_names, model.coef_):
+    print(feature, ":", round(coef, 4))
+
+# Step 11: Compare Actual and Predicted Values
+
+results = pd.DataFrame({
+    "Actual Price": y_test[:10],
+    "Predicted Price": y_pred[:10]
+})
+
+print("\n========== Actual vs Predicted Prices ==========")
+print(results)
